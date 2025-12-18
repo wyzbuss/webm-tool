@@ -87,7 +87,7 @@ export default function Home() {
 
       const data = await ffmpeg.readFile(outputName);
       const url = URL.createObjectURL(
-        new Blob([(data as Uint8Array).buffer], { type: 'video/webm' })
+        new Blob([data as any], { type: 'video/webm' })
       );
       setDownloadUrl(url);
       
