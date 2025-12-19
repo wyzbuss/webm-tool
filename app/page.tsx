@@ -7,7 +7,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('Initializing...');
+  const [message, setMessage] = useState('Initializing Converter...');
   const [progress, setProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [downloadUrl, setDownloadUrl] = useState('');
@@ -34,6 +34,7 @@ export default function Home() {
         setMessage(`Converting... ${Math.round(progress * 100)}%`);
       });
 
+      // ✅ 既然是国外用户，改回 unpkg (最稳)
       const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/umd';
       console.log(`Loading Engine from: ${baseURL}`);
 
@@ -44,7 +45,7 @@ export default function Home() {
       });
       
       setLoaded(true);
-      setMessage('Ready. Tap to upload.');
+      setMessage('Ready. Upload a video.');
     } catch (error) {
       console.error(error);
       setMessage('Error loading engine. Check console.');
@@ -62,13 +63,15 @@ export default function Home() {
     setIsLoading(true);
     setDownloadUrl('');
     setProgress(0);
-    setMessage('Processing... (Keep screen on)');
+    setMessage('Starting conversion...');
 
     const inputName = 'input.mov';
     const outputName = 'output.webm';
 
     try {
       await ffmpeg.writeFile(inputName, await fetchFile(videoFile));
+
+      setMessage('Processing... (Please wait)');
 
       await ffmpeg.exec([
         '-i', inputName,
@@ -86,6 +89,7 @@ export default function Home() {
       ]);
 
       const data = await ffmpeg.readFile(outputName);
+      // ✅ 保持 any 修复，防止 TS 报错
       const url = URL.createObjectURL(
         new Blob([data as any], { type: 'video/webm' })
       );
@@ -95,20 +99,19 @@ export default function Home() {
       await ffmpeg.deleteFile(outputName);
       
       setIsLoading(false);
-      setMessage('Done!');
+      setMessage('Done! Download your WebM.');
       setProgress(100);
 
     } catch (err) {
       console.error(err);
       setIsLoading(false);
       setMessage('Conversion failed.');
-      alert('Error. Mobile browsers have strict memory limits. Try a smaller file.');
+      alert('Conversion error. Please try a smaller file.');
     }
   };
 
   return (
     <main className="min-h-screen bg-[#0b0f19] text-slate-200 flex flex-col font-sans">
-      {/* 顶部导航：手机端减少内边距 */}
       <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -117,7 +120,15 @@ export default function Home() {
               Transparent<span className="text-green-500">WebM</span>
             </div>
           </div>
-          <div className="text-[10px] font-mono text-slate-500 border border-slate-800 px-2 py-1 rounded hidden sm:block">v1.0 Mobile</div>
+          
+          {/* 🔥 智能切换版本号 🔥 */}
+          {/* md:block = 电脑显示, md:hidden = 电脑隐藏 */}
+          <div className="hidden md:block text-xs font-mono text-slate-500 border border-slate-800 px-2 py-1 rounded">
+             v1.0 Stable
+          </div>
+          <div className="block md:hidden text-[10px] font-mono text-slate-500 border border-slate-800 px-2 py-1 rounded">
+             v1.0 Mobile
+          </div>
         </div>
       </nav>
 
@@ -141,7 +152,6 @@ export default function Home() {
 
           {loaded && !downloadUrl && (
             <div className="space-y-4 md:space-y-6">
-               {/* 增大点击区域，方便手指触摸 */}
                <div className="relative border-2 border-dashed border-slate-600 rounded-xl p-8 md:p-10 flex flex-col items-center justify-center hover:bg-slate-800/50 hover:border-green-500/50 transition-all cursor-pointer group active:scale-95 duration-100">
                   <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" onChange={(e) => setVideoFile(e.target.files?.item(0) || null)} accept=".mov,.mp4,.avi" />
                   <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
@@ -154,22 +164,37 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="text-center">
-                      <p className="text-slate-200 font-medium text-sm md:text-base">Tap to Upload Video</p>
+                      <p className="text-slate-200 font-medium text-sm md:text-base">Tap or Drag Video Here</p>
                       <p className="text-slate-500 text-xs mt-1">MOV / MP4</p>
                     </div>
                   )}
                </div>
                
-               {/* 手机端的提示文案 */}
+               {/* 🔥 智能切换提示文案 🔥 */}
                {!videoFile && (
-                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-left text-xs text-slate-400 space-y-2">
-                    <div className="font-bold text-slate-300">💡 Mobile Tips</div>
-                    <ul className="list-disc list-inside space-y-1 ml-1 text-[11px] md:text-xs">
-                      <li><strong>Battery:</strong> Processing uses high power.</li>
-                      <li><strong>Keep Screen On:</strong> Don't lock screen while converting.</li>
-                      <li><strong>Memory:</strong> Mobile browsers may crash on large files.</li>
-                    </ul>
-                 </div>
+                 <>
+                    {/* PC端显示的文案 (Best Practices) */}
+                    <div className="hidden md:block bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 text-left text-sm text-slate-400 space-y-2">
+                        <div className="flex items-center gap-2 font-bold text-slate-300">
+                          <span>💡 Best Practices</span>
+                        </div>
+                        <ul className="list-disc list-inside space-y-1 ml-1 text-xs md:text-sm">
+                          <li><strong>Recommended:</strong> Stinger transitions, alerts, short clips.</li>
+                          <li><strong>File Size:</strong> Under 200MB for best performance.</li>
+                          <li><strong>Audio:</strong> Removed automatically.</li>
+                        </ul>
+                    </div>
+
+                    {/* 手机端显示的文案 (Mobile Tips) */}
+                    <div className="block md:hidden bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-left text-xs text-slate-400 space-y-2">
+                        <div className="font-bold text-slate-300">💡 Mobile Tips</div>
+                        <ul className="list-disc list-inside space-y-1 ml-1 text-[11px]">
+                          <li><strong>Keep Screen On:</strong> Don't lock screen while converting.</li>
+                          <li><strong>Battery:</strong> Processing uses high power.</li>
+                          <li><strong>Memory:</strong> Large files may crash browser.</li>
+                        </ul>
+                    </div>
+                 </>
                )}
 
                {videoFile && (
