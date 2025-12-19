@@ -3,34 +3,24 @@ import "./globals.css";
 
 
 export const metadata: Metadata = {
-  // 1. 网页标题：强调核心功能
-  title: "Transparent WebM Converter | MOV to WebM with Alpha for OBS",
+  // 🚀 优化点：标题里加上 "Free" 和 "MP4"，点击率更高
+  title: "Transparent WebM Converter | Free MOV/MP4 to WebM for OBS",
   
-  // 2. 描述：这是给 Google/百度 爬虫看的，也是分享链接时显示的文字
+  // ✅ 描述：你原本写的这个简直满分，保留！
   description: "Free, secure, and fast tool to convert MOV/MP4 videos to WebM with transparency (Alpha Channel). Perfect for OBS Stinger transitions, alerts, and stream overlays. 100% Client-side processing (No file upload).",
   
-  // 3. 关键词：让用户能搜到你
+  // ✅ 关键词：保留，无需修改
   keywords: [
     "WebM Converter", 
     "Transparent WebM", 
     "Alpha Channel", 
     "MOV to WebM", 
+    "MP4 to WebM", // 我顺手帮你补了个 MP4
     "OBS Stinger Transition", 
     "Stream Overlay", 
     "FFmpeg WASM", 
     "Client-side Converter"
   ],
-  
-  // 4. 作者信息
-  authors: [{ name: "Visual Studio" }],
-  
-  // 5. 针对社交媒体分享的优化 (Open Graph)
-  openGraph: {
-    title: "Video to Transparent WebM | Free OBS Tool",
-    description: "Convert MOV to WebM with transparency instantly in your browser. No server upload required.",
-    type: "website",
-  },
-  // 👇 复制这一段
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>',
   },
