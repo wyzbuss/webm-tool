@@ -30,10 +30,10 @@ export default function WebMConverter({ h1Title, description, badge }: Props) {
       const ffmpeg = ffmpegRef.current;
 
       ffmpeg.on('log', ({ message }) => {
-        console.log(message);
-        if (messageRef.current && message.length < 200) {
-          messageRef.current.innerHTML = message;
-        }
+        //console.log(message);
+        //if (messageRef.current && message.length < 200) {
+          //messageRef.current.innerHTML = message;
+        //}
       });
 
       ffmpeg.on('progress', ({ progress }) => {
@@ -87,9 +87,10 @@ export default function WebMConverter({ h1Title, description, badge }: Props) {
         '-auto-alt-ref', '0', 
         '-r', '30',
         '-quality', 'realtime',
-        '-speed', '5', 
-        '-cpu-used', '5', 
-        '-b:v', '1M',
+        '-speed', '8', 
+        '-cpu-used', '8', 
+        '-b:v', '0',
+        '-crf', '18',
         '-threads', '4', 
         outputName
       ]);
