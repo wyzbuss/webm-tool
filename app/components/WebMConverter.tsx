@@ -29,13 +29,6 @@ export default function WebMConverter({ h1Title, description, badge }: Props) {
       ffmpegRef.current = new FFmpeg();
       const ffmpeg = ffmpegRef.current;
 
-      ffmpeg.on('log', ({ message }) => {
-        //console.log(message);
-        //if (messageRef.current && message.length < 200) {
-          //messageRef.current.innerHTML = message;
-        //}
-      });
-
       ffmpeg.on('progress', ({ progress }) => {
         const p = Math.round(progress * 100);
         if (p > 0 && p <= 100) setProgress(p);
@@ -79,19 +72,25 @@ export default function WebMConverter({ h1Title, description, badge }: Props) {
 
       setMessage('Processing... (Please wait)');
 
-      await ffmpeg.exec([
+await ffmpeg.exec([
         '-i', inputName,
-        '-an', 
-        '-c:v', 'libvpx', 
-        '-pix_fmt', 'yuva420p',
-        '-auto-alt-ref', '0', 
-        '-r', '30',
-        '-quality', 'realtime',
-        '-speed', '8', 
-        '-cpu-used', '8', 
-        '-b:v', '0',
-        '-crf', '18',
-        '-threads', '4', 
+        '-an',                   // 去除音频
+        '-c:v', 'libvpx',        // 编码器
+        '-pix_fmt', 'yuva420p',  // 透明通道
+        '-auto-alt-ref', '0',    // 防止透明闪烁
+        '-r', '30',              // 帧率
+        
+        // 👇 核心改动：画质优先配置
+        '-quality', 'good',      // 只要质量好 (之前是 realtime)
+        '-speed', '2',           // 速度设为 2 (之前是 8)
+                                 // Speed 2 是 VP8 的画质分界线，保证高清无码。
+        
+        '-cpu-used', '2',        // 配合 speed 2
+        
+        '-b:v', '0',             // 不限制码率上限
+        '-crf', '18',            // 视觉无损质量系数
+        '-threads', '4',         // 多线程
+        
         outputName
       ]);
 
