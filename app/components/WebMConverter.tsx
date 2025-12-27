@@ -72,26 +72,29 @@ export default function WebMConverter({ h1Title, description, badge }: Props) {
 
       setMessage('Processing... (Please wait)');
 
-await ffmpeg.exec([
-        '-i', inputName,
-        '-an',                   // 去除音频
-        '-c:v', 'libvpx',        // 编码器
-        '-pix_fmt', 'yuva420p',  // 透明通道
-        '-auto-alt-ref', '0',    // 防止透明闪烁
-        '-r', '30',              // 帧率
-        
-        // 👇 核心改动：画质优先配置
-        '-quality', 'good',      // 只要质量好 (之前是 realtime)
-        '-speed', '2',           // 速度设为 2 (之前是 8)
-                                 // Speed 2 是 VP8 的画质分界线，保证高清无码。
-        
-        '-cpu-used', '2',        // 配合 speed 2
-        
-        '-b:v', '0',             // 不限制码率上限
-        '-crf', '18',            // 视觉无损质量系数
-        '-threads', '4',         // 多线程
-        
-        outputName
+      await ffmpeg.exec([
+          '-i', inputName,
+          '-an',                 // 去除音频
+          '-c:v', 'libvpx',      // 编码器 (默认 VP8，兼容性最好)
+          '-pix_fmt', 'yuva420p',// 透明通道
+          '-auto-alt-ref', '0',  // 防止透明闪烁 (关键)
+          
+          // 👇 速度控制 (这是让你能 20 分钟跑完的关键)
+          '-deadline', 'realtime', // 告诉编码器：我很急，别磨叽
+          '-cpu-used', '5',        // 范围 0-16 (VP8)。5 是很好的平衡点，比 2 快很多。
+                                  // 如果嫌 20 分钟还慢，可以壮胆改成 '8' (但画质会下降)
+          
+          // 👇 画质控制 (修正了你的 1M 坑)
+          '-b:v', '0',             // 【重要】设为 0，表示不限制码率上限，完全由 CRF 决定
+          '-crf', '20',            // 20 是高质量。数值越小画质越好，体积越大。
+                                  // 23 有点虚，20 对于 Stinger 比较稳。
+          
+          // '-r', '30',           // 建议去掉。如果源视频是 60fps，你强制压成 30 会导致转场不流畅。
+                                  // 让它保持源视频的帧率最好。
+          
+          '-threads', '4',         // 既然是 WASM，多给点线程没毛病
+          
+          outputName
       ]);
 
       const data = await ffmpeg.readFile(outputName);
